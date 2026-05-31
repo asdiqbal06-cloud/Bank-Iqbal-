@@ -1,1 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Mini Pro</title>
 
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:20px;
+}
+
+.container{
+width:100%;
+max-width:450px;
+background:#1e293b;
+padding:25px;
+border-radius:20px;
+box-shadow:0 0 20px rgba(0,0,0,.4);
+}
+
+h1,h2{
+text-align:center;
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border:none;
+border-radius:10px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#38bdf8;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.saldo{
+font-size:32px;
+text-align:center;
+margin:15px 0;
+color:#38bdf8;
+}
+
+.card{
+background:#334155;
+padding:15px;
+border-radius:12px;
+margin-top:12px;
+}
+
+#history{
+max-height:200px;
+overflow:auto;
+margin-top:10px;
+}
+
+.item{
+background:#475569;
+padding:8px;
+border-radius:8px;
+margin-bottom:6px;
+font-size:14px;
+}
+
+.hidden{
+display:none;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="loginPage">
+<h1>🏦 Bank Iqbal Gacor</h1>
+<input type="text" id="username" placeholder="Masukkan Username">
+<button onclick="login()">Login</button>
+</div>
+
+<div id="appPage" class="hidden">
+<h2>Selamat Datang</h2>
+<h3 id="userText" style="text-align:center"></h3>
+
+<div class="saldo" id="saldo">Rp 0</div>
+
+<div class="card">
+<input type="number" id="amount" placeholder="Jumlah uang">
+<button onclick="deposit()">Setor</button>
+<button onclick="withdraw()">Tarik</button>
+</div>
+
+<div class="card">
+<input type="text" id="receiver" placeholder="Nama tujuan transfer">
+<input type="number" id="transferAmount" placeholder="Jumlah transfer">
+<button onclick="transfer()">Transfer</button>
+</div>
+
+<div class="card">
+<h3>Riwayat Transaksi</h3>
+<div id="history"></div>
+</div>
+
+<button onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script>
+let currentUser = "";
+
+function login(){
+const username = document.getElementById("username").value.trim();
+
+if(username === ""){
+alert("Masukkan username!");
+return;
+}
+
+currentUser = username;
+
+if(!localStorage.getItem("bank_"+username)){
+const data = {
+saldo:20000,
+history:["Akun dibuat - Saldo awal Rp20.000"]
+};
+localStorage.setItem("bank_"+username, JSON.stringify(data));
+}
+
+document.getElementById("loginPage").classList.add("hidden");
+document.getElementById("appPage").classList.remove("hidden");
+
+loadData();
+}
+
+function getData(){
+return JSON.parse(localStorage.getItem("bank_"+currentUser));
+}
+
+function saveData(data){
+localStorage.setItem("bank_"+currentUser, JSON.stringify(data));
+}
+
+function loadData(){
+const data = getData();
+
+document.getElementById("userText").innerText = currentUser;
+document.getElementById("saldo").innerText =
+"Rp " + data.saldo.toLocaleString("id-ID");
+
+const historyDiv = document.getElementById("history");
+historyDiv.innerHTML = "";
+
+data.history.slice().reverse().forEach(item=>{
+historyDiv.innerHTML += `<div class="item">${item}</div>`;
+});
+}
+
+function deposit(){
+let amount = Number(document.getElementById("amount").value);
+
+if(amount <= 0){
+alert("Jumlah tidak valid");
+return;
+}
+
+let data = getData();
+
+data.saldo += amount;
+data.history.push("Setor Rp" + amount.toLocaleString("id-ID"));
+
+saveData(data);
+loadData();
+}
+
+function withdraw(){
+let amount = Number(document.getElementById("amount").value);
+
+let data = getData();
+
+if(amount <= 0){
+alert("Jumlah tidak valid");
+return;
+}
+
+if(amount > data.saldo){
+alert("Saldo tidak cukup");
+return;
+}
+
+data.saldo -= amount;
+data.history.push("Tarik Rp" + amount.toLocaleString("id-ID"));
+
+saveData(data);
+loadData();
+}
+
+function transfer(){
+let tujuan = document.getElementById("receiver").value.trim();
+let amount = Number(document.getElementById("transferAmount").value);
+
+let data = getData();
+
+if(tujuan === ""){
+alert("Masukkan nama tujuan");
+return;
+}
+
+if(amount <= 0){
+alert("Jumlah tidak valid");
+return;
+}
+
+if(amount > data.saldo){
+alert("Saldo tidak cukup");
+return;
+}
+
+data.saldo -= amount;
+
+data.history.push(
+"Transfer Rp" +
+amount.toLocaleString("id-ID") +
+" ke " + tujuan
+);
+
+saveData(data);
+loadData();
+}
+
+function logout(){
+location.reload();
+}
+</script>
+
+</body>
+</html>
